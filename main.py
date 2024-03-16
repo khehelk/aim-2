@@ -1,10 +1,13 @@
 import itertools
+import json
+import tkinter as tk
 import numpy as np
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify
 import pandas as pd
 import re
 import GeneticAlgorithm
 import FuzzyLogic
+from LinguisticVariablesAndScales import LinguisticScale
 
 app = Flask(__name__)
 
@@ -43,7 +46,7 @@ def parse_products(products):
 
 
 @app.route('/lab2', methods=["GET", "POST"])
-def fuzzy_union():
+def lab2():
     if request.method == "POST":
         mf1_params = [int(x) for x in str(request.form.get('mf1_params')).replace(" ", "").split(",")]
         mf2_params = [int(x) for x in str(request.form.get('mf2_params')).replace(" ", "").split(",")]
@@ -58,6 +61,37 @@ def fuzzy_union():
                                mf2=mf2_params,
                                crisp=crisp_values)
     return render_template("lab2.html")
+
+
+@app.route("/lab3", methods=["GET", "POST"])
+def lab3():
+    if request.method == "POST":
+        data = request.form.to_dict()
+        headers = []
+        values = []
+        user_values = []
+        for key in data:
+            if len(json.loads(data[key])) == 0:
+                break
+            if key == "user_values":
+                user_values = [int(x) for x in str(json.loads(data[key]).replace(" ", "")).split(",")]
+                print(user_values)
+                continue
+            try:
+                obj = json.loads(data[key])
+                header = obj['header']
+                val = [int(i) for i in obj['values']]
+                headers.append(header)
+                values.append(val)
+            except json.JSONDecodeError:
+                pass
+        if len(headers) > 0:
+            linguistic = LinguisticScale(len(headers), headers, values, user_values)
+        else:
+            linguistic = LinguisticScale()
+        img = linguistic.plot_membership_functions()
+        return jsonify(img=img, list=linguistic.result_func_list)
+    return render_template("lab3.html")
 
 
 if __name__ == "__main__":

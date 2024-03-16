@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+     <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <title>LabWork03</title>
+</head>
+<body>
+    <header class="mt-2 container d-flex justify-content-center align-items-center">
+        <a class="btn btn-primary mr-2" href="/lab1">Лаб№1</a>
+        <a class="btn btn-primary mr-2" href="/lab2">Лаб№2</a>
+        <a class="btn btn-success mr-2" href="/lab3">Лаб№3</a>
+        <a class="btn btn-primary mr-2" href="/lab4">Лаб№4</a>
+        <a class="btn btn-primary mr-2" href="/lab5">Лаб№5</a>
+        <a class="btn btn-primary mr-2" href="/lab6">Лаб№6</a>
+        <a class="btn btn-primary" href="/lab7">Лаб№7</a>
+    </header>
+    <div class="container">
+        <div class="lab_info">
+            <h1>Вариант - 16</h1>
+            <p>
+                Разработать программное обеспечение на языке python, позволяющее
+                задавать с использованием треугольных или трапециевидных функций
+                принадлежности пользовательскую лингвистическую шкалу для решения
+                задачи <b>Оценка загруженности сервера и сети</b>. Количество оценок в шкале и параметры
+                функций принадлежности должны задаваться по умолчанию, но
+                редактироваться пользователем. Осуществить графическое отображение
+                функций принадлежности меток шкалы, выделив каждую отдельным цветом.
+
+                Есть стандартное распределение для оценки загруженности, где:<br>
+                Высокая загруженность - трапециевидная - 70,80,100,100<br>
+                Средняя загруженность - треугольная - 30, 50, 75<br>
+                Низкая загруженность - треугольная - 0, 20, 35
+            </p>
+        </div>
+        <form id="lingForm" method="post">
+            <label for="num-labels">Значения:</label><br>
+            <input type="text" id="list-values" ><br><br>
+            <label for="num-labels">Количество оценок:</label><br>
+            <input type="number" id="num-labels" min="1" onchange="addMembershipFunctionFields()"><br><br>
+            <button class="btn btn-primary" type="submit">Отправить</button>
+        </form>
+
+        <div id="membership-functions-container"></div>
+
+        <img id="linguistic-img" src="data:image/png;base64, {{ img }}">
+        <ul id="result_list">
+        </ul>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="{{ url_for('static', filename='js/index.js') }}"></script>
+    <script>
+        document.getElementById('lingForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            var formData = new FormData(this);
+
+            document.querySelectorAll('#membership-functions-container > div').forEach(function(div, i) {
+                var select = div.querySelector('select');
+                var inputs = div.querySelectorAll('.input_value');
+
+                var obj = {
+                    header: document.getElementById("input" + i).value,
+                    values: []
+                };
+
+                inputs.forEach(function(input) {
+                    obj.values.push(input.value);
+                });
+
+                formData.append('data_'+i, JSON.stringify(obj));
+            });
+
+            console.log(formData)
+
+            formData.append('user_values', JSON.stringify(document.getElementById("list-values").value))
+
+            axios.post('{{ url_for('lab3') }}', formData)
+                .then(function (response) {
+                    console.log(response.data)
+                    var imgElement = document.getElementById('linguistic-img');
+                    imgElement.src = 'data:image/png;base64,' + response.data.img;
+                    var ulResult = document.getElementById('result_list');
+                    ulResult.innerHTML = '';
+                    response.data.list.forEach(function(item) {
+                        var liElement = document.createElement('li');
+                        liElement.textContent = item;
+                        ulResult.appendChild(liElement);
+                    });
+                })
+                .catch(function (error) {
+                    console.error('Error:', error);
+                });
+        })
+    </script>
+</body>
+</html>
